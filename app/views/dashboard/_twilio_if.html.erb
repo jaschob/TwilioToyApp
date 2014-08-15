@@ -1,0 +1,57 @@
+<div id="twilio-instructions">
+  <h3>Twilio Interface</h3>
+  <p>
+    Your Number: <strong><%= phone_for_display @user.phone %></strong><br />
+    Call-in Number: <strong><%= phone_for_display @twilio_number %></strong>
+  </p>
+  <table class="twilio-instructions">
+    <% unless @user.can_do_twilio? %>
+    <tr>
+      <td colspan="2">
+        <p class="warn">Enable disabled functionality (grayed out below) by modifying your <%= link_to "Profile", edit_user_path(@user.id) %></p>
+      </td>
+    </tr>
+    <% end %>
+    <tr class="row-odd <%= unless @user.can_do_twilio? then 'disabled' end%>">
+      <th>Check Balance (SMS)</th>
+      <td>
+        Send an SMS message containing just the single word <strong><span class="code">balance</span></strong> to <strong><%= phone_for_display @twilio_number %></strong>. You should promptly receive a response with your current balance.
+          <% unless @user.can_do_twilio? %>
+            <p>[enable by setting a phone number]</p>
+          <% end %>
+      </td>
+    </tr>
+    <tr class="row-even <%= unless @user.can_do_twilio? then 'disabled' end%>" >
+      <th>Check Balance (Voice)</th>
+      <td>
+        Dial <strong><%= phone_for_display @twilio_number %></strong> and wait for the main menu voice prompts. Press <strong><span class="code">1</span></strong> to hear your balance.
+          <% unless @user.can_do_twilio? %>
+            <p>[enable by setting a phone number]</p>
+          <% end %>
+      </td>
+    </tr>
+
+    <tr class="row-odd <%= if @user.notify_never? or not @user.can_do_twilio? then 'disabled' end%>" >
+      <th>
+        Receive transaction notifications
+      </th>
+      <td>
+        Whenver a transaction is received by the network, you will receive either an SMS message or a short voice call, depending on your profile settings.
+          <% if @user.notify_never? %>
+            <p>[enable by setting notification preference to "SMS" or "Voice"]</p>
+          <% end %>
+      </td>
+    </tr>
+
+    <tr class="row-even <%= unless @user.can_do_twilio? then 'disabled' end%>" >
+      <th>Send Transaction (SMS)</th>
+      <td>
+        Send an SMS to <strong><%= phone_for_display @twilio_number %></strong> in the form of <strong><span class="code">send &lt;username&gt; &lt;amount&gt;</span></strong>. For example, to send 0.001BTC to "patty", text <strong><span class="code">send patty 0.001</span></strong>. You'll receive a confirmation or failure notification afterwards.
+          <% unless @user.can_do_twilio? %>
+            <p>[enable by setting a phone number]</p>
+          <% end %>
+      </td>
+    </tr>
+
+  </table>
+</div>

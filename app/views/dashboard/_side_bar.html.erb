@@ -1,0 +1,29 @@
+<div id="side-bar">
+  <div id="side-bar-balance">
+    <strong>Balance</strong>:
+    <span class="ajax inprogress hidden">
+      <%= image_tag "spinner.gif" %>
+    </span>
+    <span class="ajax done highlight">
+      <%= html_for_balance @balance  %>
+    </span>
+  </div>
+  <div id="side-bar-users">
+    <strong>Other Users (minimum 1 confirmation)</strong>:
+    <table id="userinfo-table">
+      <% @other_users.each_with_index do |other_user, index| %>
+      <tr id="userinfo-<%= other_user.username %>"
+          class="side-bar-usr-row <%= index % 2 != 0 ? "row-even" : "row-odd" %>">
+        <td>
+          <%= other_user.username %>
+        </td>
+        <td>
+          <%= amount_for_display(other_user.coin_account.balance).html_safe %>
+        </td>
+      </tr>
+      <% end %>
+    </table>
+  </div>
+  [<a id="refresh">Force refresh all data</a>]
+</div>
+

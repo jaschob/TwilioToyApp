@@ -1,0 +1,78 @@
+// Place all the styles related to the dashboard controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+.row-even {
+    background: #E0E0E0;    
+}
+
+.disabled {
+    color: #808080
+}
+
+p.warn {
+    color: red;
+    font-weight: bold;
+}
+
+/* CSS for the side-bar on the right, which displays user balances */
+
+#side-bar {
+    float: right;
+    width: 25%;
+    text-align: right;
+}
+
+#side-bar-balance {
+    padding-top: 10px;
+    //padding-bottom: 10px;
+}
+
+#side-bar-balance .highlight {
+    background: #FFFF60;
+}
+
+#side-bar-users table {
+    width: 100%;
+    border: solid grey 1px;
+}
+
+#side-bar-users td {
+    padding: 4px 2px 4px 0px;
+}
+
+// fixed-width text
+.code {
+    font-family: monospace;
+}
+
+
+/* CSS for the recent transaction listing */
+#recent-tx-table {
+    //border: 1px solid black;
+    border-collapse: collapse;
+}
+
+#recent-tx-table th {
+    padding-left: 0.2em;
+    padding-right: 1em;
+    //border: 1px solid red;
+}
+
+#recent-tx-table td {
+    padding: 0.5em 1em 0.5em 1em;
+    border: 1px solid black;
+    //font-size: 10pt;
+}
+
+#recent-tx-table td {
+}
+
+
+/* CSS for the Twilio instruction section */
+#twilio-instructions {
+    padding-right: 4em;
+}
+
+table.twilio-instructions tr { vertical-align: top; }
+

@@ -1,0 +1,54 @@
+<div id="main-transactions-recent">
+  <h3>Recent Transactions</h3>
+  
+  <% if @recent_tx.empty? %>
+    <em id="recent-tx-none">No recent transactions</em>
+  <% end %>
+  <table id="recent-tx-table" class="<%= if @recent_tx.empty? then 'hidden' end %>">
+    <tr>
+      <th>Date</th>
+      <th>Category</th>
+      <th>Amount</th>
+      <th title="Transaction ID">Trans. ID</th>
+      <th title="Confirmations">Conf.</th>
+      <th>Block</th>
+    </tr>
+    <% @recent_tx.each_with_index do |tx, i| %>
+      <tr class="<%= if (i+1) % 2 == 0 then 'row-even' else 'row-odd' end %>"
+          id="tx-<%= tx.txid %>">
+        <td>
+          <%= html_for_tx_date(tx).html_safe %>
+        </td>
+        <td>
+          <%= html_for_tx_category(tx).html_safe %>
+        </td>
+        <td>
+          <%= html_for_tx_amount(tx).html_safe %>
+        </td>
+        <td>
+          <%= html_for_tx_id(tx).html_safe %>
+        </td>
+        <td>
+          <%= html_for_tx_confirmations(tx).html_safe  %>
+        </td>
+        <td>
+          <%= html_for_tx_blockhash(tx).html_safe %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+  
+  <p>
+    Your bitcoin address for receiving payments:
+    <span class="code">
+      <%= @user.coin_account.default_address %>
+    </span>
+  </p>
+  <p>
+    Bitcoin received won't be available in your balance until the transaction
+    has a minimum of one confirmation. Conversely, money sent to another user
+    won't show up in their balance until there's been one confirmation. In the
+    testnet, blocks aren't always mined quickly and it may take some time (even
+    30 minutes to an hour) to get a transaction confirmation.
+  </p>
+</div>

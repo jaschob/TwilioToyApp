@@ -1,0 +1,24 @@
+defaults: &defaults
+  coin_rpc_ssl: false
+  coin_rpc_user: "bitcoinrpc"
+  coin_rpc_pass: "passwordhere"
+
+  new_user_donation_amount: "1.00000000"
+
+  twilio_number: "+18011234567"
+  twilio_account_sid: "the_sid"
+  twilio_auth_token: "the_auth_token"
+  twilio_enforce_auth: no
+
+development:
+  <<: *defaults
+  coin_rpc_site: "localhost:18334"
+
+test:
+  <<: *defaults
+  coin_rpc_site: "localhost:18335"
+
+production:
+  <<: *defaults
+  coin_rpc_site: "localhost:18332"
+  twilio_enforce_auth: no

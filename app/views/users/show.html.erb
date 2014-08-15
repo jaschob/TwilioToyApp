@@ -1,0 +1,27 @@
+<div class="info-box-blurb">
+  <h1>Your Profile</h1>
+  <p>Update your notification preferences and phone number here, as necessary.</p>
+</div>
+<div class="info-box-content">
+  <p id="notice"><%= notice %></p>
+  <p>
+    <strong>Username:</strong>
+    <%= @user.username %>
+  </p>
+  <p>
+    <strong>Phone:</strong>
+    <%= @user.phone %>
+  </p>
+  <p>
+    <strong>Notify of incoming Bitcoin transactions:</strong>
+    <% if @user.notify_never? %>Never
+    <% elsif @user.notify_by_sms? %>by SMS
+    <% elsif @user.notify_by_voice? %>by voice call
+    <% else %>N/A
+    <% end %>
+  </p>
+</div>
+<div style="clear:both">&nbsp;</div>
+
+<%= link_to 'Change Profile', edit_user_path(@user) %> |
+<%= link_to 'Home', root_path %>

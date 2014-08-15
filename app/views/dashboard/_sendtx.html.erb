@@ -1,0 +1,32 @@
+<div id="main-transactions-new">
+  <h3>Send Bitcoin</h3>
+
+  <!-- area for BTC Sending AJAX messages and status updates -->
+  <div id="tx-send-status">
+    <p class="ajax inprogress hidden">
+      <span></span>
+    </p>
+    <p class="ajax success hidden">
+      <span></span>
+      <%= image_tag "close.jpg", { height: 16, width: 16 } %>
+    </p>
+    <p class="ajax error hidden">
+      <span></span>
+      <%= image_tag "close.jpg", { height: 16, width: 16 } %>
+    </p>
+  </div>
+
+  <% if @other_users.empty? %>
+    <strong>No other users exist to send money to yet!</strong>
+  <% else %>
+    Send
+    <%= hidden_field_tag :send_tx_current_balance, @balance.to_s("F") %>
+    <%= text_field_tag :send_tx_amount, nil, {
+          :placeholder => "0.01000000"
+        } %> BTC
+    to
+    <%= select_tag :send_tx_recipient, options_from_collection_for_select(@other_users, :id, :username)%>
+    <%= submit_tag "Send!", :id => "send_tx_btn" %><br />
+    <em>Note: most transactions will incur a small fee, usually one millibitcoin (0.00100000 BTC).</em>
+  <% end %>
+</div>

@@ -1,0 +1,43 @@
+<div class="info-box-blurb">
+  <h1>Login</h1>
+  <p>
+    New here? <%= link_to "Register", new_user_path %>
+    and get a few testnet bitcoin!
+  </p>
+  <p>
+    Or, cheat and use one of the following example accounts with a password of "password":
+    <ul>
+      <li>joe</li>
+      <li>patty</li>
+      <li>nemo</li>
+      <li>burnzie</li>
+    </ul>
+  </p>
+</div>
+<div class="info-box-content">
+<%= form_for(@user_session) do |f| %>
+  <% if @user_session.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@user_session.errors.count, "error") %> logging in:</h2>
+
+      <ul>
+      <% @user_session.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <p>
+    <%= f.label :username %><br />
+    <%= f.text_field :username %>
+  </p>
+  <p>
+    <%= f.label :password %><br />
+    <%= f.password_field :password %>
+  </p>
+  <p><%= f.submit "Submit" %></p>
+<% end %>
+</div>
+<div style="clear:both">&nbsp;</div>
+

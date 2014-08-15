@@ -1,0 +1,37 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+<%
+# note: this is a valid salt/scrypt of the password "password"
+crypted_pass = "400$8$34$da3bb83fc9439ffe$5fe6e7747ac342654e390086373b9d2a9bc23021f20fd32507240160ed5a431d"
+pass_salt = "LuBPRE58MIXfP5Qu1HKn"
+%>
+
+# note: all users should have 100 Satoshi (0.00000100 BTC) in the bitcoin wallet.
+one:
+  username: one
+  phone: "+11235551231"
+  notify_tx: never
+  crypted_password:  <%= crypted_pass %>
+  password_salt:     <%= pass_salt %>
+
+two:
+  username: two
+  phone: "+11235551232"
+  notify_tx: never
+  crypted_password: <%= crypted_pass %>
+  password_salt:    <%= pass_salt %>
+
+three:
+  username: three
+  phone: "+11235551233"
+  notify_tx: SMS
+  crypted_password: <%= crypted_pass %>
+  password_salt:    <%= pass_salt %>
+
+four:
+  username: four
+  phone: "+11235551234"
+  notify_tx: Voice
+  crypted_password: <%= crypted_pass %>
+  password_salt:    <%= pass_salt %>
+

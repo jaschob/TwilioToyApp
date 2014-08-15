@@ -1,0 +1,18 @@
+<%= hidden_field_tag :load_time, DateTime.now().as_json %>
+<%= hidden_field_tag :best_block, @best_block %>
+<%= hidden_field_tag :ajax_poll_path, poll_path %>
+<%= hidden_field_tag :ajax_balance_path, account_path({ :with_html => "yes" }) %>
+<%= hidden_field_tag :ajax_userinfo_path, users_path({
+    :exclude_current_user => "yes",
+    :with_html => "yes"
+}) %>
+<%= hidden_field_tag :ajax_recenttx_path, recenttx_account_path({ :with_html => "yes" }) %>
+<%= hidden_field_tag :ajax_send_path, sendfrom_account_path %>
+
+<div id="dashboard">
+  <p id="notice"><%= notice %></p>
+  <%= render 'side_bar' %>
+  <%= render 'sendtx' %>
+  <%= render 'recenttx' %>
+  <%= render 'twilio_if' %>
+</div>

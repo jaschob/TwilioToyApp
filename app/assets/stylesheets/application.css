@@ -1,0 +1,96 @@
+/*
+ * This is a manifest file that'll be compiled into application.css, which will include all the files
+ * listed below.
+ *
+ * Any CSS and SCSS file within this directory, lib/assets/stylesheets, vendor/assets/stylesheets,
+ * or vendor/assets/stylesheets of plugins, if any, can be referenced here using a relative path.
+ *
+ * You're free to add application-wide styles to this file and they'll appear at the bottom of the
+ * compiled file so the styles you add here take precedence over styles defined in any styles
+ * defined in the other CSS/SCSS files in this directory. It is generally better to create a new
+ * file per style scope.
+ *
+ *= require_tree .
+ *= require_self
+ */
+
+body {
+    background: #B0B0FF;
+}
+
+#content {
+    background: white;
+    margin: 50px 20px 50px 20px;
+    padding: 20px 80px 20px 80px;
+}
+
+#title-text {
+    float: right;
+    color: #B00000;
+}
+
+#title-image {
+    float: left;
+}
+
+#title-ruler {
+    clear: both;
+}
+
+#ajax-bar {
+    float: left;
+    height: 1.5em;
+}
+
+.ajax.success {
+    color: green;
+}
+
+.ajax.done {
+    color: green
+}
+
+.ajax.error {
+    color: red;
+    font-weight: bold;
+}
+
+.hidden {
+    display: none
+}
+
+#user-bar {
+    float: right;
+}
+
+#page-content {
+    clear: both;
+    padding: 20px 0px 20px 0px
+}
+
+#footer {
+    font-size: 6pt;
+    color: green;
+    float: right;
+}
+
+li {
+    list-style-type: square;
+}
+
+div.info-box-blurb {
+    width: 20em;
+    float: left;
+    padding: 0px 80px 80px 0px;
+}
+
+div.info-box-content {
+    float: left;
+}
+
+
+div.centered {
+    margin-left: auto;
+    margin-right: auto;
+    width: 80%;
+}
