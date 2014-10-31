@@ -1,11 +1,19 @@
 Rails.application.routes.draw do
+
   resources :users
   resources :user_sessions
+
   resource :account, only: [:show] do
     member do
       post 'sendfrom'
       get 'recenttx'
       match 'show', via: [:get, :post]
+    end
+  end
+
+  resources :transactions, only: [:create, :show] do
+    collection do
+      get 'recent(/:count)', action: :recent, as: :recent
     end
   end
 

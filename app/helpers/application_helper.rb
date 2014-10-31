@@ -5,13 +5,17 @@ module ApplicationHelper
   YADA = "..."
 
   # format a bitcoin amount for display
-  def amount_for_display(amt)
+  def amount_for_display(amt, opts={})
     if amt.abs < CUTOFF_FOR_BTC and not amt.zero?
       satoshi = amt * BigDecimal.new("100000000")
-      "#{satoshi.truncate} " +
-        link_to("Satoshi",
-                "https://en.bitcoin.it/wiki/Satoshi",
-                :target => '_blank')
+      if opts[:no_html]
+        "#{satoshi.truncate} Satoshi"
+      else
+        "#{satoshi.truncate} " +
+          link_to("Satoshi",
+                  "https://en.bitcoin.it/wiki/Satoshi",
+                  :target => '_blank')
+      end
     else
       "#{amt.to_s('F')} BTC"
     end

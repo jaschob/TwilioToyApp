@@ -60,30 +60,21 @@ module Coin
       # which we need to filter out
       raw_tx_list = []
 
-      # ugh! ugly, but we have to page through results
-      while raw_tx_list.length < count
+      # a little ugly, but we have to page through results until we find enough
+      # ones that are applicable to the target user
+      begin
         batch = rpc.listtransactions(name, count, from)
-        break if batch.length < 1
-
-        raw_tx_list.push(*batch.select{ |i| i.has_key? 'txid' })
         from += count
-      end
 
-      # now that we have enough, turn the raw data into model objects
+        raw_tx_list.push(*batch.select{ |i| i.has_key? 'txid' })        
+      end while raw_tx_list.length < count and batch.length > 0
+      
+      # transform the raw data into transaction objects
       raw_tx_list.collect do |tx_data|
-
-        # look up our information on this tx
-        tx = Transaction.safe_find_or_create(txid: tx_data['txid'],
-                                             user: user)
-
-        # update model information using bitcoind
-        tx.populate_from_daemon tx_data
-        tx.save
-        tx
+        # note: .new means unpersisted
+        Transaction.new(txid: tx_data['txid'],
+                        user: user).apply_rpc_listtx_data! tx_data
       end
-
-      # use the database to return latest transactions in correct order
-      Coin::Transaction.where(user: user).order(time: :desc).limit(count)
     end
 
     # returns the default bitcoin address for the account

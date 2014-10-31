@@ -1,148 +1,159 @@
 module Coin
-  # we store transactions not so much for the important information, but to
-  # keep track of changes for user notifications etc. The actual transaction
-  # information (amount, fees, etc.) is queried through the JSON-RPC interface.
+  # An ActiveRecord class to represent a Bitcoin transaction. The primary key
+  # for each record is the transaction id and a user reference, so one
+  # transaction between two application users will be represented with two rows.
+  # These objects are persisted only to reliably send a single notification to
+  # users for new transactions. Actual transaction details (amounts,
+  # confirmations etc.) are sourced through the bitcoin RPC interface.
   class Transaction < ActiveRecord::Base
-    # Fields that are mapped from a JSON-RPC call to bitcoind into the model.
+    # Fields that are mapped from the 'details' section of a JSON-RPC result
+    # into object attributes
     ALLOWED_FIELDS = [:address, :category, :amount, :fee,
                       :confirmations, :blockhash, :blocktime,
                       :time, :timereceived, :comment, :confirmations]
+
+    # Fields that are mapped from the header section of a JSON-RPC result into
+    # object attributes
     ALLOWED_FIELDS_HEADER = ALLOWED_FIELDS.reject do |f|
       [:address, :category, :amount, :fee].include? f
     end
 
+    ############################################################################
+    ### ActiveRecord configurations, validations and call-backs
     belongs_to :user
 
-    # hook up callbacks
-    after_create :set_defaults
+    after_create do             # uses delayed_job to queue notifications
+      self.delay.notify_user
+    end
+    ############################################################################
 
-    # Called via bin/rails runner whenever bitcoind is notified of a new
-    # transaction - must be configured via walletnotify option to bitcoind
+    # non-persisted attributes
+    attr_accessor :category, :amount, :fee, :blockhash, :comment, :address,
+    :confirmations, :blocktime, :time, :timereceived, :counterpart
+
+    # Class method, called via bin/rails runner whenever bitcoind is notified of
+    # a new transaction. This functionality must be configured via the
+    # +walletnotify+ option to bitcoind.
     def Transaction.txnotify(txid)
       rpc = RPC.new
       tx_data = rpc.gettransaction txid
 
-      Rails.logger.info "Processing bitcoind notification for tx #{txid}"
+      # the details section lists transaction specifics for each affected user
       tx_data['details'].each do |tx_account_data|
         account_name = tx_account_data['account']
-        Rails.logger.debug "Account name is #{account_name}"
+
         # find the user by the account name
         user = account_name.blank? ? nil :
           User.find_by(username: account_name)
 
         if user
-          # find/create a transaction
-          tx = safe_find_or_create(txid: txid, user: user)
+          # The bitcoind daemon spawns one notification process per user, and
+          # unique constraint violations are pretty much guaranteed. If another
+          # process has already created the record, it's been queued for
+          # notification, so this process can end.
+          begin
+            Transaction.find_or_create_by(txid: txid, user: user)
+            Rails.logger.debug "PID #{Process.pid} created TX record #{self}."
 
-          # send the user notification, with record locking
+          rescue ActiveRecord::RecordNotUnique
+            Rails.logger.warn "PID #{Process.pid} found #{self} prev. created."
 
-          tx.with_lock do
-            # populate the object from the JSON response
-            tx.populate_from_daemon tx_account_data, tx_data
-            tx.notify_user
-            tx.save!
           end
         end
       end
     end
 
-    # bitcoind's blocknotify is run as a thread, leading to concurrency issues
-    # when finding/creating model records here
-    def Transaction.safe_find_or_create(params = {})
-      begin
-        Transaction.find_or_create_by(txid: params[:txid], user: params[:user])
-      rescue ActiveRecord::RecordNotUnique
-        Rails.logger.warn "unique constraint violation!"
-        Transaction.find_by(txid: params[:txid], user: params[:user])
+    # Method to set the non-persisted attributes of this transaction by
+    # querying the Bitcoin RPC daemon. +raw_data+ should be taken from the
+    # _details_ section of the JSON response, +raw_header_data+ from the
+    # response itself. If +raw_data+ is +nil+, a new RPC query is issued.
+    def load_rpc_data!
+      rpc = RPC.new
+      header = rpc.gettransaction txid
+      detail = header['details'].detect do |d|
+        d['account'] == self.user.coin_account.name
       end
+      
+      apply_rpc_gettx_data! header, detail
     end
 
-    def populate_from_daemon(raw_data = nil, raw_header_data = nil)
-      # if we weren't already given raw data from a JSON call, fetch it
-      unless raw_data
-        rpc = RPC.new
-        raw_header_data = rpc.gettransaction txid
+    def apply_rpc_listtx_data!(data)
+      apply_setters! safe_rpc_params(data)
+      return self
+    end
 
-        raw_data = raw_header_data.detect do |d|
-          d.account == self.user.coin_account.name
-        end
+    def apply_rpc_gettx_data!(header, detail)
+      # massage JSON data into update parameters, and update ourselves
+      apply_setters! safe_rpc_params(detail, header)
+
+      # if we have a send/receive transaction, save the counterpart information
+      if header['details'] and header['details'].length == 2
+        sender = header['details'].detect {|d| d['category'] == 'send' }
+        receiver = header['details'].detect {|d| d['category'] == 'receive' }
+        
+        self.counterpart = ((category == 'send' and receiver) or
+                            (category == 'receive' and sender))
       end
 
-      # massage JSON data into update parameters, update
-      params = json_response_to_update raw_data, raw_header_data
-      update params
+      return self
     end
 
     # Notify owning user of this transaction, based on their preferences.
-    # Optional block is called if a notification was sent.
-    # TODO this should really be decoupled using a queue
     def notify_user
-      return unless user.can_do_twilio?
-      return if self.user_notified   # don't do this twice!
+      return unless user.can_do_twilio? # user has no phone number
 
       case
-      when user.notify_never?
-        self.user_notified = true
-
       when user.notify_by_sms?
-        client = Rails.application.twilio_client
-        client.account.messages.create(:body => generate_sms_message,
-                                       :to   => user.phone,
-                                       :from => Rails.application.twilio_number)
-        self.user_notified = true
-
+        notification = Coin::Notification.new(tx: self, method: :sms)
       when user.notify_by_voice?
-        # unimplemented as of yet
-        #user_notified = false
+        notification = Coin::Notification.new(tx: self, method: :voice)
       end
 
-      block_given? and yield
+      notification.run
     end
 
-    def amount_as_text
-      ApplicationController.helpers.amount_for_display(amount)
+    def to_s
+      "Tx %s [user %s]" % [self.txid, self.user]
     end
 
     private
 
-    # Can flatten a gettransactions response into an update hash.
-    # listtransactions already returns a flat hash. In either case,
-    # only valid params are selected
-    def json_response_to_update(account_data, header_data = {})
-      params = ActionController::Parameters.new(account_data)
-      header_params = ActionController::Parameters.new(header_data)
+    def safe_rpc_params(account_data, header_data = {})
+      account_params, header_params = Hash.new, Hash.new
 
-      # start with the allowed fields from account information
-      params = params.permit(ALLOWED_FIELDS)
-      
-      # augment from header information, if available
-      header_params = header_params.permit(ALLOWED_FIELDS_HEADER)
-      ALLOWED_FIELDS_HEADER.each do |f|
-        if not params.has_key?(f) and header_params.has_key?(f)
-          params[f] = header_params[f]
+      # map only allowed object attributes from the RPC response.
+      # the account-level fields take precedence.
+      [
+       [ALLOWED_FIELDS, account_data, account_params],
+       [ALLOWED_FIELDS_HEADER, header_data, header_params]
+      ].each do |level|
+        keys, data, target = *level
+        if data
+          keys.zip(keys.map {|k| data[k.to_s] })
+            .reject {|pair| pair[1].nil? }
+            .each {|pair| target[pair[0]] = pair[1] }
         end
+        
       end
 
+      combined_params = header_params.merge(account_params)
       # also convert fields from unix epoch seconds
+      # TODO keep functions in top-level array as well
       [:blocktime, :time, :timereceived].each do |f|
-        params[f] = Time.at(params[f]) if params[f]
+        combined_params[f] = Time.at(combined_params[f]) if combined_params[f]
       end
 
-      return params
+      return combined_params
     end
 
-    def generate_sms_message
-      msg = "Transaction for #{amount_as_text} " +
-        "in category '#{category}' registered."
-      if blockhash.blank?
-        msg += " (unconfirmed)"
+    # Take a hash of attribute names and calls the setter methods with the
+    # corresponding values.
+    def apply_setters!(updates)
+      updates.each do |field, value|
+        setter = (field.to_s + "=").to_sym
+        self.send setter, value
       end
-
-      return msg
     end
 
-    def set_defaults
-      self.user_notified = false
-    end
   end
 end

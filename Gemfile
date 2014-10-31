@@ -45,5 +45,8 @@ gem 'thin', group: [:development, :test]
 gem 'authlogic'
 gem 'scrypt', '1.2.1'
 
+# Use delayed_job as a simple queueing mechanism for notifications
+gem 'delayed_job_active_record'
+
 # Hook in twilio for SMS/Voice calls!
 gem 'twilio-ruby'

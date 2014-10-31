@@ -1,0 +1,1 @@
+At <%= @tx.time.strftime("%I:%M%P") %>: <%= amount_for_display(@tx.amount.abs, :no_html => true) %> <%= @tx.category == 'send' ? 'sent to' : 'received at' %> address <%= shorten_hash(@tx.address, 20) %><%= if @tx.counterpart and @tx.counterpart['account'] then " (%s)" % @tx.counterpart['account'] end %> in transaction <%= shorten_hash(@tx.txid, 20) %>.
