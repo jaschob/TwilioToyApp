@@ -33,9 +33,15 @@ module Coin
 
       req = JSON.generate post_body
       @logger.debug "JSON-RPC call: #{req}"
-      resp = JSON.parse http_post_request(req), {
-        decimal_class: BigDecimal
-      }
+
+      resp = JSON.parse http_post_request(req)
+      # this would be a useful feature...
+      #resp = JSON.parse http_post_request(req), {
+      #  decimal_class: BigDecimal
+      #}
+
+      # ... but til then, convert to BigDecimals by hand
+      resp = floats2decimals(resp)
 
       if resp['error']
         @logger.error "JSON-RPC error: #{req} --> #{resp}"
@@ -56,6 +62,31 @@ module Coin
       def message
         @code.nil? ? @message : "#{@message} (code #{@code})"
       end
+    end
+
+    # Ugly helper here to turn Floats returned by the JSON parser into
+    # BigDecimals, which are safer. https://github.com/flori/json/issues/219.
+    def floats2decimals(raw)
+      processed = Hash.new
+      raw.collect do |key, value|
+        if value.class == Float # turn the Floats into BigDecimals
+          processed[key] = BigDecimal.new(value, BigDecimal::COIN_PRECISION)
+
+        # looks like a Hash
+        elsif [:keys, :values, :each].all? {|m| value.respond_to? m}
+          processed[key] = self.floats2decimals(value)
+
+        # looks like an Array/Enumerable
+        elsif [:each, :collect].all? {|m| value.respond_to? m}
+          processed[key] = value.collect {|i| self.floats2decimals(i)}
+
+        # something else: leave unchanged
+        else
+          processed[key] = value
+        end
+      end
+
+      return processed
     end
 
     private
