@@ -1,4 +1,6 @@
 class UserSessionsController < ApplicationController
+  include TwilioAuthHelper
+
   def new
     @user_session = UserSession.new
   end
@@ -11,6 +13,17 @@ class UserSessionsController < ApplicationController
     else
       render :action => 'new'
     end
+  end
+
+  def find
+    #debugger
+    session = super             # find normally by cookie
+    unless session              # try to identify twilio user
+      twilio_user = identify_twilio_user
+    end
+
+    session ||
+      twilio_user && UserSession.create(twilio_user, false)
   end
 
   def destroy

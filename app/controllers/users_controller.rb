@@ -2,6 +2,8 @@ class UsersController < ApplicationController
   before_filter :require_user, except: [:new, :create]
   before_action :set_user
 
+  respond_to :html, :json, :twiml
+
   def index
     @known_balances = Coin::Account.all_balances
     @users = User.all.sort do |a, b|
@@ -10,11 +12,6 @@ class UsersController < ApplicationController
 
     if exclude_current_user?
       @users = @users.reject {|u| u == current_user }
-    end
-
-    respond_to do |format|
-      format.json { render :locals => { :html => with_html? } }
-      format.html
     end
   end
 
@@ -93,7 +90,7 @@ class UsersController < ApplicationController
     end
 
     def exclude_current_user?
-      TRUE_WORDS.include? params[:exclude_current_user]
+      ApplicationHelper::TRUE_WORDS.include? params[:exclude_current_user]
     end
 
     # Donates an amount defined in the application configuration to a user.

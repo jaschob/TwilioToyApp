@@ -34,7 +34,11 @@ module Coin
       req = JSON.generate post_body
       @logger.debug "JSON-RPC call: #{req}"
 
-      resp = JSON.parse http_post_request(req)
+      begin
+        resp = JSON.parse http_post_request(req)
+      rescue Errno::ECONNREFUSED # common, bitcoind is down!
+        raise RPCConnectionError, "Bitcoin client not reachable!"
+      end
       # this would be a useful feature...
       #resp = JSON.parse http_post_request(req), {
       #  decimal_class: BigDecimal
@@ -45,7 +49,7 @@ module Coin
 
       if resp['error']
         @logger.error "JSON-RPC error: #{req} --> #{resp}"
-        raise RPCError.new(resp['error'])
+        raise RPCError, resp['error']
       else
         resp['result']
       end
@@ -62,6 +66,9 @@ module Coin
       def message
         @code.nil? ? @message : "#{@message} (code #{@code})"
       end
+    end
+
+    class RPCConnectionError < RuntimeError
     end
 
     # Ugly helper here to turn Floats returned by the JSON parser into

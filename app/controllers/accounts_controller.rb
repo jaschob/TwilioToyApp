@@ -2,14 +2,9 @@ class AccountsController < ApplicationController
   before_filter :require_user
   before_action :set_account
 
+  respond_to :html, :json, :twiml
+
   def show
-    respond_to do |format|
-      format.json { render :locals => { :html => with_html? } }
-      format.xml {
-        render "balance_#{twilio_type}.twiml" if twilio_type
-      }
-      format.html
-    end
   end
 
   def recenttx
@@ -20,9 +15,6 @@ class AccountsController < ApplicationController
     @recent_tx = @account.recent_tx(opts).sort do |a, b|
       b.time <=> a.time
     end
-    respond_to do |format|
-      format.json { render :locals => { :html => with_html? } }
-    end
   end
 
   # POST only
@@ -32,8 +24,10 @@ class AccountsController < ApplicationController
     amount = BigDecimal.new(params[:amount])
     recipient = User.find_by(id: params[:recipient])
 
+    # initiate the send
     current_user.coin_account.txsend amount, recipient
 
+    # render a response appropriate to the format
     respond_to do |format|
       format.json { render json: {
           status: "ok",
@@ -42,7 +36,7 @@ class AccountsController < ApplicationController
                    "bitcoin network."
         }
       }
-      format.xml {
+      format.twiml {
         render "sendfrom_#{twilio_type}.twiml",
                 locals: {
                   :amount => amount,

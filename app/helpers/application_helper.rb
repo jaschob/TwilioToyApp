@@ -1,8 +1,15 @@
 module ApplicationHelper
+  TRUE_WORDS = %w( true yes )
   CUTOFF_FOR_BTC = BigDecimal.new("0.00001000")
   PHONE_REGEX = /\A [+]1(\d{3})(\d{3})(\d{4}) \z/x
 
   YADA = "..."
+
+  # Determines if the request included a parameter asking to include HTML text,
+  # which is useful for JSON requests.
+  def with_html?
+    TRUE_WORDS.include? params[:with_html]
+  end
 
   # format a bitcoin amount for display
   def amount_for_display(amt, opts={})

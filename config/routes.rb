@@ -17,13 +17,16 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :twilio do
+    match "sms", via: [:get, :post], to: "sms#incoming"
+    match "voice(/:action)", via: [:get, :post], to: "voice", as: :voice, defaults: { action: 'menu' }
+  end
+
   get "login" => "user_sessions#new", :as => :login
   get "logout" => "user_sessions#destroy", :as => :logout
   get "poll" => "application#poll"
 
   get "dashboard" => "dashboard#display", :as => :dashboard
-
-  match "twilio/:action", via: [:get, :post], controller: "twilio", as: :twilio
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

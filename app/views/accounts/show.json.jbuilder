@@ -1,6 +1,6 @@
 json.name @account.name
 
-if html
+if with_html?
   json.balance do |json|
     balance = @account.balance  
     json.raw balance
