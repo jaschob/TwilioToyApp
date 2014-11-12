@@ -1,3 +1,4 @@
 xml.instruct!
-xml.Message "Your command was not recognized."
-
+xml.Response do |xml|
+  xml.Message "Your command was not recognized."
+end
