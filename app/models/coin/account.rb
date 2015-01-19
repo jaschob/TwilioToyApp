@@ -68,6 +68,9 @@ module Coin
 
         raw_tx_list.push(*batch.select{ |i| i.has_key? 'txid' })        
       end while raw_tx_list.length < count and batch.length > 0
+
+      # trim the list down to the required size
+      raw_tx_list = raw_tx_list.first(count)
       
       # transform the raw data into transaction objects
       raw_tx_list.collect do |tx_data|

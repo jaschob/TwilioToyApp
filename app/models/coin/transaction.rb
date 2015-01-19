@@ -109,7 +109,7 @@ module Coin
         notification = Coin::Notification.new(tx: self, method: :voice)
       end
 
-      notification.run
+      notification.run if notification
     end
 
     def to_s
